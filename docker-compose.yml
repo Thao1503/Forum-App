@@ -1,0 +1,40 @@
+services:
+  # Database
+  mysql:
+    image: mysql:8
+    container_name: forum-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: forumapp
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    container_name: forum-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Chính là cái App Java của bạn
+  app:
+    build: .
+    container_name: forum-app
+    ports:
+      - "8081:8081"
+    environment:
+      # QUAN TRỌNG: Trong Docker, host không còn là 'localhost' nữa
+      # mà là tên của service trong compose
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/forumapp
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      - mysql
+      - redis
+
+volumes:
+  mysql_data:
+  redis_data:

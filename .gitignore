@@ -1,0 +1,80 @@
+### Java & Maven ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+build/
+*.class
+*.war
+*.ear
+*.jar
+*.bundle.js
+
+### Maven Wrapper - Cần thiết để chạy dự án mà không cần cài Maven ###
+# (Bỏ chặn các file này để người khác/Server có thể dùng ./mvnw)
+!.mvn/wrapper/maven-wrapper.properties
+!mvnw
+!mvnw.cmd
+
+### IDE - IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### IDE - VS Code ###
+.vscode/
+*.code-workspace
+
+### IDE - STS/Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+### Operating System ###
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+### Environment & Secrets - CỰC KỲ QUAN TRỌNG ###
+.env
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+### Logs ###
+*.log
+logs/
+*.log.gz
+*.log.stderr.txt
+*.log.stdout.txt
+
+### Docker & Database Data ###
+# Chặn các thư mục dữ liệu nếu bạn dùng Bind Mount
+mysql-data/
+db-data/
+redis-data/
+*.rdb
+*.aof
+
+### Frontend (Dự phòng cho tương lai) ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+### Temporary files ###
+tmp/
+temp/
+*.swp
+*~
+*.bak
