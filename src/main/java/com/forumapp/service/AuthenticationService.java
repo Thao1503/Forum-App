@@ -1,7 +1,10 @@
 package com.forumapp.service;
 
+import com.forumapp.entity.UserEntity;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.RegisterRequest;
+
+import java.util.List;
 
 public interface AuthenticationService {
 

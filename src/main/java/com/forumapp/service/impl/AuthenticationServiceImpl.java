@@ -1,7 +1,10 @@
 package com.forumapp.service.impl;
 
 
+import com.forumapp.common.enums.UserStatus;
 import com.forumapp.entity.UserEntity;
+import com.forumapp.exception.DuplicateResourceException;
+import com.forumapp.mapper.UserMapper;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.RegisterRequest;
 import com.forumapp.repository.UserRepository;
@@ -24,11 +27,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final EmailUtils emailUtils;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
     public void register(RegisterRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new RuntimeException("Email đã được đăng kí");
+            throw new DuplicateResourceException("Email đã tồn tại");
+        }
+
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new DuplicateResourceException("Tên người dùng đã tồn tại.");
         }
         String otp = String.format("%06d", new Random().nextInt(1000000));
         redisTemplate.opsForValue().set("OTP : " + request.getEmail(), otp, 5, TimeUnit.MINUTES);
@@ -54,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    @Transactional
+//    @Transactional
     public boolean verifyRegister(String email, String otpCode){
         String saveOtp = (String) redisTemplate.opsForValue().get("OTP : " + email);
         if(saveOtp != null && saveOtp.equals(otpCode)){
@@ -65,12 +73,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 newUser.setUsername(regData.getUsername());
                 String encodedPassword = passwordEncoder.encode(regData.getPassword());
                 newUser.setPassword(encodedPassword);
+                newUser.setVerified(true);
+                newUser.setStatus(UserStatus.ACTIVE);
                 userRepository.save(newUser);
                 redisTemplate.delete("OTP : " + email);
-                redisTemplate.delete("RAG_DATA : " + email);
+                redisTemplate.delete("REG_DATA : " + email);
                 return true;
             }
         }
         return false;
     }
+
 }

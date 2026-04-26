@@ -25,7 +25,7 @@ public class SecurityConfig {
                 // 2. Cấu hình phân quyền
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép tất cả mọi người truy cập các API bắt đầu bằng /api/auth/ (như register, login)
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**","/error").permitAll()
                         // Tất cả các API khác mới cần phải đăng nhập
                         .anyRequest().authenticated()
                 );
