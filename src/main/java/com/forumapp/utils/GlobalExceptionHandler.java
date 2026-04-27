@@ -2,6 +2,8 @@ package com.forumapp.utils;
 
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.model.response.ApiResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +32,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException ex) {
         return ResponseEntity.status(409).body(ApiResponse.<Void>builder()
                 .status(409)
+                .message(ex.getMessage())
+                .build());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Void>builder()
+                .status(400)
                 .message(ex.getMessage())
                 .build());
     }

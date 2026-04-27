@@ -1,15 +1,4 @@
 services:
-  mysql:
-    image: mysql:8
-    container_name: forum-mysql
-    ports:
-      - "3307:3306"
-    environment:
-      MYSQL_DATABASE: forumapp
-      MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - mysql_data:/var/lib/mysql
-
   redis:
     image: redis:7-alpine
     container_name: forum-redis
@@ -19,5 +8,4 @@ services:
       - redis_data:/data
 
 volumes:
-  mysql_data:
   redis_data:

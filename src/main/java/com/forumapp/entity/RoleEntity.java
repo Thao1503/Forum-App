@@ -1,11 +1,17 @@
 package com.forumapp.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "roles")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RoleEntity {
 
     @Id
@@ -17,28 +23,4 @@ public class RoleEntity {
 
     @OneToMany(mappedBy = "roleEntity")
     private List<UserEntity> userEntities;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<UserEntity> getUsers() {
-        return userEntities;
-    }
-
-    public void setUsers(List<UserEntity> userEntities) {
-        this.userEntities = userEntities;
-    }
 }
