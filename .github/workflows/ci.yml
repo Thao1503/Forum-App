@@ -21,4 +21,8 @@ jobs:
           cache: maven
 
       - name: Build and Run Tests
-        run: mvn clean test
+        run: mvn clean test -U -Dspring.profiles.active=test
+        env:
+            JWT_SECRET: ${{ secrets.JWT_SECRET }}
+            SPRING_DATA_REDIS_HOST: localhost
+            SPRING_DATA_REDIS_PORT: 6379
