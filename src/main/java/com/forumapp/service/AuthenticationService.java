@@ -1,17 +1,17 @@
 package com.forumapp.service;
 
+import com.forumapp.model.request.PasswordRequest;
+import com.forumapp.model.request.LoginRequest;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.RegisterRequest;
-import com.forumapp.model.response.LoginResponse;
 
 public interface AuthenticationService {
 
     void register(RegisterRequest request);
-//    void forgetPassword(UserEntity userEntity);
-    void sendOtp(String email);
-    void verifyRegister(String email, String otpCode);
-    String forgotPassword(String identifier);
-    void verifyOtpForgotPassword(String email, String otpCode);
-    void resetPassword(String email, String password, String passwordConfirm);
-    String login(String identifier, String password);
+    void sendOtp(OtpRequest request);
+    void verifyRegister(OtpRequest request);
+    void forgotPassword(LoginRequest request);
+    void verifyOtpForgotPassword(OtpRequest request);
+    void resetPassword(PasswordRequest request);
+    String login(LoginRequest request);
 }

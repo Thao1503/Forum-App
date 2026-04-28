@@ -6,6 +6,9 @@ import com.forumapp.entity.RoleEntity;
 import com.forumapp.entity.UserEntity;
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.mapper.UserMapper;
+import com.forumapp.model.request.LoginRequest;
+import com.forumapp.model.request.OtpRequest;
+import com.forumapp.model.request.PasswordRequest;
 import com.forumapp.model.request.RegisterRequest;
 import com.forumapp.model.response.LoginResponse;
 import com.forumapp.repository.RoleRepository;
@@ -55,12 +58,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void sendOtp(String email){
+    public void sendOtp(OtpRequest request){
         String otp = String.format("%06d",new Random().nextInt(1000000));
-        redisTemplate.opsForValue().set("OTP:" + email, otp, 5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("OTP:" + request.getEmail(), otp, 5, TimeUnit.MINUTES);
 
         emailUtils.sendOtpVerify(
-                email,
+                request.getEmail(),
                 "Mã OTP của bạn",
                 "Mã xác thực là : " + otp
         );
@@ -69,12 +72,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public void verifyRegister(String email, String otpCode){
-        String saveOtp = (String) redisTemplate.opsForValue().get("OTP:" + email);
-        if(saveOtp == null || !saveOtp.equals(otpCode)){
+    public void verifyRegister(OtpRequest request){
+        String saveOtp = (String) redisTemplate.opsForValue().get("OTP:" + request.getEmail());
+        if(saveOtp == null || !saveOtp.equals(request.getOtp())){
             throw new RuntimeException("Mã OTP không đúng hoặc đã hêt hạn");
         }
-            RegisterRequest regData = (RegisterRequest) redisTemplate.opsForValue().get("REG_DATA:" + email);
+            RegisterRequest regData = (RegisterRequest) redisTemplate.opsForValue().get("REG_DATA:" + request.getEmail());
             if(regData != null){
                 UserEntity newUser = userMapper.toEntity(regData);
                 RoleEntity memberRole = roleRepository.findByName("MEMBER")
@@ -84,13 +87,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 newUser.setVerified(true);
                 newUser.setStatus(UserStatus.ACTIVE);
                 userRepository.save(newUser);
-                redisTemplate.delete(Arrays.asList("OTP:" + email, "REG_DATA:" + email));
+                redisTemplate.delete(Arrays.asList("OTP:" + request.getEmail(), "REG_DATA:" + request.getEmail()));
         }
     }
 
     @Override
-    public String forgotPassword(String identifier) {
-        UserEntity user = userRepository.findByUsernameOrEmail(identifier, identifier)
+    public void forgotPassword(LoginRequest request) {
+        UserEntity user = userRepository.findByUsernameOrEmail(request.getAccount(), request.getAccount())
                 .orElseThrow(() -> new RuntimeException("Email hoặc tên người dùng không đúng"));
 
         String email = user.getEmail();
@@ -101,45 +104,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "Mã OTP phục hồi mật khẩu",
                 "Mã xác thực của bạn là: " + otp
         );
-        return user.getEmail();
     }
 
     @Override
-    public void verifyOtpForgotPassword(String email, String otpCode){
-        String saveOtp = (String) redisTemplate.opsForValue().get("OTP:" + email);
-        if(saveOtp == null || !saveOtp.equals(otpCode)) {
+    public void verifyOtpForgotPassword(OtpRequest request){
+        String saveOtp = (String) redisTemplate.opsForValue().get("OTP:" + request.getEmail());
+        if(saveOtp == null || !saveOtp.equals(request.getOtp())) {
             throw new RuntimeException("Mã OTP không đúng hoặc đã hêt hạn");
         }
-        redisTemplate.opsForValue().set("RESET_AUTH:" + email, "verified", 5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("RESET_AUTH:" + request.getEmail(), "verified", 5, TimeUnit.MINUTES);
     }
 
     @Override
     @Transactional
-    public void resetPassword(String email,String password, String passwordConfirm){
-        if(!password.equals(passwordConfirm)){
+    public void resetPassword(PasswordRequest request){
+        if(!request.getPassword().equals(request.getPasswordConfirm())){
             throw new RuntimeException("Mật khẩu không khớp nhau");
         }
-        String check = (String) redisTemplate.opsForValue().get("RESET_AUTH:" + email);
+        String check = (String) redisTemplate.opsForValue().get("RESET_AUTH:" + request.getEmail());
         if(check == null){
             throw new RuntimeException("Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn");
         }
-        UserEntity user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(request.getEmail())
                         .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-        redisTemplate.delete("REST_AUTH:" + email);
+        redisTemplate.delete("REST_AUTH:" + request.getEmail());
     }
 
     @Override
-    public String login(String identifier, String password){
-        UserEntity user = userRepository.findByUsernameOrEmail(identifier, identifier)
+    public String login(LoginRequest request){
+        UserEntity user = userRepository.findByUsernameOrEmail(request.getAccount(), request.getAccount())
                 .orElseThrow(() -> new RuntimeException("Email hoặc tên người dùng không đúng"));
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
-        }
-
-        if (!user.isVerified()) {
-            throw new RuntimeException("Tài khoản chưa được kích hoạt qua Email");
         }
 
         if (user.getStatus().equals("BANNED")) {

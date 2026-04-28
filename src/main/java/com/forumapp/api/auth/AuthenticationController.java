@@ -1,6 +1,8 @@
 package com.forumapp.api.auth;
 
 
+import com.forumapp.model.request.PasswordRequest;
+import com.forumapp.model.request.LoginRequest;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.RegisterRequest;
 import com.forumapp.model.response.ApiResponse;
@@ -30,8 +32,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-account")
-    public ResponseEntity<ApiResponse<String>> verify(@RequestBody Map<String, String> request) {
-        authenticationService.verifyRegister(request.get("email"), request.get("otp"));
+    public ResponseEntity<ApiResponse<String>> verify(@Valid @RequestBody OtpRequest request) {
+        authenticationService.verifyRegister(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(201)
                 .message("Đăng kí tài khoản thành công")
@@ -41,8 +43,8 @@ public class AuthenticationController {
 
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<ApiResponse<String>> sendOtp(@RequestBody Map<String, String> request){
-        authenticationService.sendOtp(request.get("email"));
+    public ResponseEntity<ApiResponse<String>> sendOtp(@RequestBody OtpRequest request){
+        authenticationService.sendOtp(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Mã OTP mới đã được gửi, vui lòng kiểm tra email")
@@ -50,8 +52,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody Map<String, String> request){
-        authenticationService.forgotPassword(request.get("identifier"));
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody LoginRequest request){
+        authenticationService.forgotPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Mã OTP đã được gửi, vui lòng kiểm tra email")
@@ -59,8 +61,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password/verify-otp")
-    public ResponseEntity<ApiResponse<String>> verifyOtpForgotPassword(@RequestBody Map<String, String> request){
-        authenticationService.verifyOtpForgotPassword(request.get("email"), request.get("otp"));
+    public ResponseEntity<ApiResponse<String>> verifyOtpForgotPassword(@RequestBody OtpRequest request){
+        authenticationService.verifyOtpForgotPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Vui lòng nhập mật khẩu mới")
@@ -68,8 +70,8 @@ public class AuthenticationController {
     }
 
     @PutMapping("/forgot-password/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody Map<String, String> request){
-        authenticationService.resetPassword(request.get("email"), request.get("password"), request.get("passwordConfirm"));
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody PasswordRequest request){
+        authenticationService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Đổi mật khẩu thành công")
@@ -77,11 +79,11 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody Map<String, String> request){
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest request){
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Đăng nhập thành công")
-                .data(authenticationService.login(request.get("identifier"),request.get("password")))
+                .data(authenticationService.login(request))
                 .build());
     }
 
