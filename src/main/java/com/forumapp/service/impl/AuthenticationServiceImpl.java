@@ -140,7 +140,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
-        if (user.getStatus().equals("BANNED")) {
+        if (user.getStatus() ==  UserStatus.BANNED) {
             throw new RuntimeException("Tài khoản hiện đang bị khóa");
         }
 
