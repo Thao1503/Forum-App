@@ -4,6 +4,7 @@ package com.forumapp.service.impl;
 import com.forumapp.common.enums.UserStatus;
 import com.forumapp.entity.RoleEntity;
 import com.forumapp.entity.UserEntity;
+import com.forumapp.entity.UserProfileEntity;
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.mapper.UserMapper;
 import com.forumapp.model.request.LoginRequest;
@@ -12,6 +13,7 @@ import com.forumapp.model.request.PasswordRequest;
 import com.forumapp.model.request.RegisterRequest;
 import com.forumapp.model.response.LoginResponse;
 import com.forumapp.repository.RoleRepository;
+import com.forumapp.repository.UserProfileRepository;
 import com.forumapp.repository.UserRepository;
 import com.forumapp.service.AuthenticationService;
 import com.forumapp.utils.EmailUtils;
@@ -36,6 +38,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
+    private final UserProfileRepository profileRepository;
     private final JwtUtils jwtUtils;
 
     @Override
@@ -86,6 +89,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 newUser.setPassword(passwordEncoder.encode(regData.getPassword()));
                 newUser.setVerified(true);
                 newUser.setStatus(UserStatus.ACTIVE);
+
+                UserProfileEntity profile = UserProfileEntity.builder()
+                                .user(newUser)
+                                .build();
+
+                profile.setUser(newUser);
+
+                newUser.setProfile(profile);
                 userRepository.save(newUser);
                 redisTemplate.delete(Arrays.asList("OTP:" + request.getEmail(), "REG_DATA:" + request.getEmail()));
         }
@@ -129,13 +140,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-        redisTemplate.delete("REST_AUTH:" + request.getEmail());
+        redisTemplate.delete("RESET_AUTH:" + request.getEmail());
     }
 
     @Override
     public String login(LoginRequest request){
         UserEntity user = userRepository.findByUsernameOrEmail(request.getAccount(), request.getAccount())
                 .orElseThrow(() -> new RuntimeException("Email hoặc tên người dùng không đúng"));
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
         }
@@ -144,7 +156,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new RuntimeException("Tài khoản hiện đang bị khóa");
         }
 
-        return jwtUtils.generateToken(user);
+        String token = jwtUtils.generateToken(user);
+
+        redisTemplate.opsForValue().set("TOKEN:" + user.getEmail(), token, 24, TimeUnit.HOURS);
+
+        return token;
     }
 
 

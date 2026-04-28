@@ -1,5 +1,6 @@
 package com.forumapp.entity;
 
+import com.forumapp.common.enums.RankStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,9 +26,12 @@ public class UserProfileEntity {
     private Long points = 0L;
 
     @Column(name = "user_rank")
-    private String rank;
-    private String avatar;
-    private String bio;
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private RankStatus rank = RankStatus.Newbie;
+
+    @Builder.Default
+    private String avatar = "res.cloudinary.com/dglnkljzx/image/upload/v1777365438/su0lhzdt4uxwpn28iitf.jpg";
 
     private LocalDate dob;
     private String phone;

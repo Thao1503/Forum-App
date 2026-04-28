@@ -14,4 +14,5 @@ public interface AuthenticationService {
     void verifyOtpForgotPassword(OtpRequest request);
     void resetPassword(PasswordRequest request);
     String login(LoginRequest request);
+
 }
