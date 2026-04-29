@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(409).body(ApiResponse.<Void>builder()
                 .status(409)
                 .message(ex.getMessage())
+                .build());
+    }
+
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(ResponseStatusException ex) {
+        int code = ex.getStatusCode().value();
+        return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.<Void>builder()
+                .status(code)
+                .message(ex.getReason() != null ? ex.getReason() : ex.getMessage())
                 .build());
     }
 

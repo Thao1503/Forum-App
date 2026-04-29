@@ -15,6 +15,8 @@ public class PasswordRequest {
 
     private String email;
 
+    private String otp;
+
     @NotBlank(message = "Mật khẩu không được để trống")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])\\S{6,}$",
             message = "Mật khẩu phải từ 6 ký tự, bao gồm chữ hoa, chữ thường, số, ký tự đặc biệt và không có khoảng trắng")

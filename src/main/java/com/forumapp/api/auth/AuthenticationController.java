@@ -6,9 +6,15 @@ import com.forumapp.model.request.LoginRequest;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.RegisterRequest;
 import com.forumapp.model.response.ApiResponse;
+import com.forumapp.model.response.LoginResponse;
 import com.forumapp.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,7 +74,7 @@ public class AuthenticationController {
                 .build());
     }
 
-    @PutMapping("/forgot-password/reset-password")
+    @PostMapping("/forgot-password/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody PasswordRequest request){
         authenticationService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
@@ -78,14 +84,89 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest request){
-        return ResponseEntity.ok(ApiResponse.<String>builder()
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @RequestBody LoginRequest request,
+            HttpServletResponse response){
+        LoginResponse data = authenticationService.login(request);
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", data.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .maxAge(30L * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        data.setRefreshToken(null);
+
+        return ResponseEntity.ok(ApiResponse.<LoginResponse>builder()
                 .status(200)
                 .message("Đăng nhập thành công")
-                .data(authenticationService.login(request))
+                .data(data)
                 .build());
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (var c : request.getCookies()) {
+                if ("refresh_token".equals(c.getName())) {
+                    refreshToken = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        authenticationService.logout(request, refreshToken);
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .status(200)
+                .message("Đăng xuất thành công")
+                .data("Token đã bị vô hiệu hóa")
+                .build());
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (var c : request.getCookies()) {
+                if ("refresh_token".equals(c.getName())) {
+                    refreshToken = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        LoginResponse data = authenticationService.refreshAccessToken(refreshToken);
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", data.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .maxAge(30L * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        data.setRefreshToken(null);
+
+        return ResponseEntity.ok(ApiResponse.<LoginResponse>builder()
+                .status(200)
+                .message("Refresh token thành công")
+                .data(data)
+                .build());
+    }
 
 
 

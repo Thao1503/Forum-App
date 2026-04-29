@@ -3,7 +3,9 @@ package com.forumapp.repository;
 import java.util.List;
 import java.util.Optional;
 import com.forumapp.entity.UserEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,5 +16,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsernameOrEmail(String username, String email);
 
     Optional<UserEntity> findByEmail(String email);
+
+//    List<UserEntity> findAll();
 
 }
