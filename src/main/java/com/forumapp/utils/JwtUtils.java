@@ -39,9 +39,13 @@ public class JwtUtils {
                 .compact();
     }
 
+
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+
+    public String extractId(String token){return  extractClaim(token, Claims::getId);}
+
 
     public Date extractExpiration(String token){
         return extractClaim(token , Claims::getExpiration);
