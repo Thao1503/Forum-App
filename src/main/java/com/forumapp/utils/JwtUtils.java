@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.LongSummaryStatistics;
 import java.util.function.Function;
 
 @Component
@@ -44,8 +45,9 @@ public class JwtUtils {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String extractId(String token){return  extractClaim(token, Claims::getId);}
-
+    public Long extractId(String token) {
+        return extractClaim(token, claims -> claims.get("id", Long.class));
+    }
 
     public Date extractExpiration(String token){
         return extractClaim(token , Claims::getExpiration);

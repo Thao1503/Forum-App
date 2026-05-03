@@ -17,8 +17,18 @@ public class CategoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(unique = true, nullable = false)
     private String slug;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private CategoryEntity parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<CategoryEntity> children;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostEntity> posts;
@@ -31,4 +41,7 @@ public class CategoryEntity {
 
     @Builder.Default
     private Long messageCount = 0L;
+
+    @Column(name = "display_order")
+    private Integer displayOrder;
 }
