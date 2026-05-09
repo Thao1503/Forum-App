@@ -31,15 +31,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Dev default: "*"
-        // Prod: set env var `APP_CORS_ALLOWED_ORIGINS` (comma-separated),
-        // e.g. "https://your-frontend.vercel.app,https://yourdomain.com"
-        String raw = System.getenv().getOrDefault("APP_CORS_ALLOWED_ORIGINS", "*").replace(" ", "");
-        config.setAllowedOriginPatterns(Arrays.asList(raw.split(",")));
+
+        // === THAY ĐỔI PHẦN NÀY ===
+        List<String> allowedOrigins = Arrays.asList(
+                "https://forum-front-end-pied.vercel.app",   // Production
+                "http://localhost:3000",                     // React default
+                "http://localhost:5173",                     // Vite default
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5173"
+        );
+
+        config.setAllowedOriginPatterns(allowedOrigins);   // Hoặc dùng setAllowedOrigins nếu không cần wildcard subdomain
+        // config.setAllowedOrigins(allowedOrigins);       // Dùng cái này nếu không cần pattern
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+        config.setAllowedHeaders(List.of("*"));           // Tạm thời cho "*" để test
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(false); // Bearer token flow; set true only if you use cookies.
+        config.setAllowCredentials(true);                 // Quan trọng: đổi thành true
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
