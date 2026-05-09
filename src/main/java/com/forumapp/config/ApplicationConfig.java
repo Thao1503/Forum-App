@@ -1,6 +1,7 @@
 package com.forumapp.config;
 
 import com.forumapp.repository.UserRepository;
+import com.forumapp.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByEmail(username)
+                .map(UserPrincipal::create)
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + username));
     }
 

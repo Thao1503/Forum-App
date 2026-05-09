@@ -15,13 +15,12 @@ public interface AuthenticationService {
     void register(RegisterRequest request);
     void sendOtp(OtpRequest request);
     void verifyRegister(OtpRequest request);
-    void forgotPassword(LoginRequest request);
+    String forgotPassword(LoginRequest request);
     void verifyOtpForgotPassword(OtpRequest request);
     void resetPassword(PasswordRequest request);
     LoginResponse login(LoginRequest request);
     void logout(HttpServletRequest request, String refreshToken);
     LoginResponse refreshAccessToken(String refreshToken);
 
-    List<UserResponse> getAllUsers();
 
 }

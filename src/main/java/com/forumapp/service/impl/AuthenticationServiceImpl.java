@@ -48,7 +48,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
-    private final UserProfileRepository profileRepository;
     private final JwtUtils jwtUtils;
 
 
@@ -117,11 +116,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void forgotPassword(LoginRequest request) {
+    public String forgotPassword(LoginRequest request) {
         UserEntity user = userRepository.findByUsernameOrEmail(request.getAccount(), request.getAccount())
                 .orElseThrow(() -> new RuntimeException("Email hoặc tên người dùng không đúng"));
 
+
         String email = user.getEmail();
+        redisTemplate.delete("OTP" + email);
         String otp = String.format("%06d", new Random().nextInt(1000000));
         redisTemplate.opsForValue().set("OTP:" + email, otp, 5, TimeUnit.MINUTES);
         emailUtils.sendOtpVerify(
@@ -129,6 +130,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "Mã OTP phục hồi mật khẩu",
                 "Mã xác thực của bạn là: " + otp
         );
+
+        return email;
     }
 
     @Override
@@ -252,21 +255,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
     }
 
-    @Override
-    public List<UserResponse> getAllUsers(){
-        return userRepository.findAll().stream()
-                .map(user -> UserResponse.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .email(user.getEmail())
-                        .isVerified(user.isVerified())
-                        .status(user.getStatus().name())
-                        .roleName(user.getRoleEntity().getName())
-                        .createdAt(user.getCreatedAt())
-                        .avatar(user.getProfile() != null ? user.getProfile().getAvatar() : null)
-                        .build())
-                .collect(Collectors.toList());
-    }
+
 
 
 

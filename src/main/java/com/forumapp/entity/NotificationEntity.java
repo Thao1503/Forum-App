@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "notifications")
@@ -30,10 +32,10 @@ public class NotificationEntity {
     private boolean isRead = false;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @PrePersist
-    protected void onCreate() { this.createdAt = LocalDateTime.now(); }
+    protected void onCreate() { this.createdAt = OffsetDateTime.now(); }
 
 
 }

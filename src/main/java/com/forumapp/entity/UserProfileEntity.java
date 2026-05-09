@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "user_profiles")
@@ -31,8 +32,8 @@ public class UserProfileEntity {
     private RankStatus rank = RankStatus.Newbie;
 
     @Builder.Default
-    private String avatar = "res.cloudinary.com/dglnkljzx/image/upload/v1777365438/su0lhzdt4uxwpn28iitf.jpg";
+    private String avatar = "https://res.cloudinary.com/dglnkljzx/image/upload/v1778276911/qqi9hsjrhabfl19a2box.jpg";
 
-    private LocalDate dob;
+    private OffsetDateTime dob;
     private String phone;
 }
