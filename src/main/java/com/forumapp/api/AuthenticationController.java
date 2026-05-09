@@ -1,4 +1,4 @@
-package com.forumapp.api.auth;
+package com.forumapp.api;
 
 
 import com.forumapp.model.request.PasswordRequest;
@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +19,12 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping(value = "api/auth")
+@RequestMapping("api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+
 
 
     @PostMapping("/register")
@@ -58,14 +58,14 @@ public class AuthenticationController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody LoginRequest request){
-        authenticationService.forgotPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
                 .message("Mã OTP đã được gửi, vui lòng kiểm tra email")
+                .data(authenticationService.forgotPassword(request))
                 .build());
     }
 
-    @PostMapping("/forgot-password/verify-otp")
+    @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<String>> verifyOtpForgotPassword(@RequestBody OtpRequest request){
         authenticationService.verifyOtpForgotPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
@@ -74,8 +74,8 @@ public class AuthenticationController {
                 .build());
     }
 
-    @PostMapping("/forgot-password/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody PasswordRequest request){
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody PasswordRequest request){
         authenticationService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .status(200)
@@ -163,7 +163,7 @@ public class AuthenticationController {
 
         return ResponseEntity.ok(ApiResponse.<LoginResponse>builder()
                 .status(200)
-                .message("Refresh token thành công")
+                .message("Làm mới token thành công")
                 .data(data)
                 .build());
     }
