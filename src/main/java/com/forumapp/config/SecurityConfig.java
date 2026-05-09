@@ -30,60 +30,98 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        // Dev default: "*"
-        // Prod: set env var `APP_CORS_ALLOWED_ORIGINS` (comma-separated),
-        // e.g. "https://your-frontend.vercel.app,https://yourdomain.com"
-        String raw = System.getenv().getOrDefault("APP_CORS_ALLOWED_ORIGINS", "*").replace(" ", "");
-        config.setAllowedOriginPatterns(Arrays.asList(raw.split(",")));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(false); // Bearer token flow; set true only if you use cookies.
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+
+        // FRONTEND URL
+        String raw = System.getenv()
+                .getOrDefault(
+                        "APP_CORS_ALLOWED_ORIGINS",
+                        "https://forum-front-end-pied.vercel.app"
+                )
+                .replace(" ", "");
+
+        config.setAllowedOriginPatterns(
+                Arrays.asList(raw.split(","))
+        );
+
+        config.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        // JWT Bearer token
+        config.setAllowCredentials(false);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // PRE-FLIGHT REQUEST
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // PUBLIC
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/category/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/post/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/utils/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/user/**").permitAll()
+                        // PUBLIC GET APIs
+                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
 
+                        // ADMIN
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-
+                        // AUTHENTICATED APIs
                         .requestMatchers(HttpMethod.POST, "/api/category/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/post/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/comment/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/user/**").authenticated()
+
                         .requestMatchers(HttpMethod.PUT, "/api/user/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/post/**").authenticated()
 
-
-
-
+                        .requestMatchers(HttpMethod.DELETE, "/api/comment/delete/**").authenticated()
 
                         .requestMatchers(HttpMethod.DELETE, "/api/post/delete/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE,"/api/comment/delete/**").authenticated()
+
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
         return http.build();
     }
 }
