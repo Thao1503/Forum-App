@@ -32,28 +32,27 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // === THAY ĐỔI PHẦN NÀY ===
         List<String> allowedOrigins = Arrays.asList(
-                "https://forum-front-end-pied.vercel.app",   // Production
-                "http://localhost:3000",                     // React default
-                "http://localhost:5173",                     // Vite default
+                "https://forum-front-end-pied.vercel.app",
+                "http://localhost:3000",
+                "http://localhost:5173",
                 "http://127.0.0.1:3000",
                 "http://127.0.0.1:5173"
         );
 
-        config.setAllowedOriginPatterns(allowedOrigins);   // Hoặc dùng setAllowedOrigins nếu không cần wildcard subdomain
-        // config.setAllowedOrigins(allowedOrigins);       // Dùng cái này nếu không cần pattern
+        config.setAllowedOriginPatterns(allowedOrigins);
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));           // Tạm thời cho "*" để test
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);                 // Quan trọng: đổi thành true
+        // Tạm dùng "*" để test, sau có thể thu hẹp lại
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("Authorization"));
+
+        config.setAllowCredentials(true);   // Quan trọng
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
