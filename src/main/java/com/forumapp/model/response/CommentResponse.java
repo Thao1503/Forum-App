@@ -24,6 +24,8 @@ public class CommentResponse {
     private String slug;
     private Long quoted;
     private Long quotedPost;
+    private CategoryResponse category;
+    private CategoryResponse subCategory;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private OffsetDateTime createAt;

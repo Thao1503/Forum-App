@@ -1,4 +1,4 @@
-﻿package com.forumapp.utils;
+package com.forumapp.utils;
 
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.model.response.ApiResponse;

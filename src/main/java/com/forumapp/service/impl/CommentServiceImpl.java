@@ -3,6 +3,7 @@ package com.forumapp.service.impl;
 import com.forumapp.entity.*;
 import com.forumapp.mapper.CommentMapper;
 import com.forumapp.model.request.CommentRequest;
+import com.forumapp.model.response.CategoryResponse;
 import com.forumapp.model.response.CommentResponse;
 import com.forumapp.model.response.CommentWsDto;
 import com.forumapp.model.response.NotificationWsDto;
@@ -36,6 +37,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentResponse> findTop5CommentNewest(){
+
         return commentRepository.findLatestComments(PageRequest.of(0, 5)).stream().map(comment -> CommentResponse.builder()
                 .id(comment.getId())
                 .avatar(comment.getUser().getProfile().getAvatar())
@@ -43,6 +45,16 @@ public class CommentServiceImpl implements CommentService {
                 .title(comment.getPost().getTitle())
                 .slug(comment.getSlug())
                 .content(comment.getContent())
+                .subCategory(CategoryResponse.builder()
+                        .id(comment.getPost().getCategory().getId())
+                        .slug(comment.getPost().getCategory().getSlug())
+                        .name(comment.getPost().getCategory().getName())
+                        .build())
+                .category(CategoryResponse.builder()
+                        .id(comment.getPost().getCategory().getParent().getId())
+                        .slug(comment.getPost().getCategory().getParent().getSlug())
+                        .name(comment.getPost().getCategory().getParent().getName())
+                        .build())
                 .createAt(comment.getCreatedAt())
                 .build()).collect(Collectors.toList());
     }

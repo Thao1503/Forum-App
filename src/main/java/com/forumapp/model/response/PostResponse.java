@@ -26,6 +26,8 @@ public class PostResponse {
     private String slug;
     private Boolean locked;
     private RankStatus rank;
+    private CategoryResponse category;
+    private CategoryResponse subCategory;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private OffsetDateTime createdAt;

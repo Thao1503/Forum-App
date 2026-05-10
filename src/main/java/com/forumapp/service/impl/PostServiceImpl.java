@@ -5,10 +5,7 @@ import com.forumapp.entity.*;
 import com.forumapp.mapper.PostMapper;
 import com.forumapp.model.repository.PostStats;
 import com.forumapp.model.request.PostRequest;
-import com.forumapp.model.response.CommentResponse;
-import com.forumapp.model.response.FollowResponse;
-import com.forumapp.model.response.PostResponse;
-import com.forumapp.model.response.StatisticResponse;
+import com.forumapp.model.response.*;
 import com.forumapp.repository.*;
 import com.forumapp.security.UserPrincipal;
 import com.forumapp.service.NotificationService;
@@ -74,6 +71,16 @@ public class PostServiceImpl implements PostService {
                         .username(post.getAuthor().getUsername())
                         .avatar(post.getAuthor().getProfile().getAvatar())
                         .slug(post.getSlug())
+                        .subCategory(CategoryResponse.builder()
+                                .id(post.getCategory().getId())
+                                .slug(post.getCategory().getSlug())
+                                .name(post.getCategory().getName())
+                                .build())
+                        .category(CategoryResponse.builder()
+                                .id(post.getCategory().getParent().getId())
+                                .slug(post.getCategory().getParent().getSlug())
+                                .name(post.getCategory().getParent().getName())
+                                .build())
                         .createdAt(post.getCreatedAt())
                         .build()).collect(Collectors.toList());
     }
@@ -303,6 +310,16 @@ public class PostServiceImpl implements PostService {
                         .username(post.getAuthor().getUsername())
                         .avatar(post.getAuthor().getProfile().getAvatar())
                         .slug(post.getSlug())
+                        .subCategory(CategoryResponse.builder()
+                                .id(post.getCategory().getId())
+                                .slug(post.getCategory().getSlug())
+                                .name(post.getCategory().getName())
+                                .build())
+                        .category(CategoryResponse.builder()
+                                .id(post.getCategory().getParent().getId())
+                                .slug(post.getCategory().getParent().getSlug())
+                                .name(post.getCategory().getParent().getName())
+                                .build())
                         .createdAt(post.getCreatedAt())
                         .build()).collect(Collectors.toList());
     }
