@@ -26,7 +26,7 @@ public class AdminController {
     public ResponseEntity<Page<UserResponse>> getAllUser(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
-            @PageableDefault(size = 2, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable){
         return ResponseEntity.ok(userService.getAllUsers(search,status,pageable));
     }
 
