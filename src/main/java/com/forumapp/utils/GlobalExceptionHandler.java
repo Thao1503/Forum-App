@@ -2,6 +2,7 @@ package com.forumapp.utils;
 
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.model.response.ApiResponse;
+import org.springframework.mail.MailException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,6 +53,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Void>builder()
                 .status(400)
                 .message(ex.getMessage())
+                .build());
+    }
+
+    @ExceptionHandler(MailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMailException(MailException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.<Void>builder()
+                .status(503)
+                .message("Khong gui duoc email OTP. Kiem tra SMTP/MAIL_PASSWORD tren server.")
                 .build());
     }
 
