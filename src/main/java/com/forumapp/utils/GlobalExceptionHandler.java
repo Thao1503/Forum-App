@@ -1,8 +1,7 @@
-package com.forumapp.utils;
+﻿package com.forumapp.utils;
 
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.model.response.ApiResponse;
-import org.springframework.mail.MailException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,7 +23,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(ApiResponse.<Map<String, String>>builder()
                 .status(400)
-                .message("Dữ liệu không hợp lệ")
+                .message("Dá»¯ liá»‡u khÃ´ng há»£p lá»‡")
                 .data(errors)
                 .build());
     }
@@ -56,19 +55,12 @@ public class GlobalExceptionHandler {
                 .build());
     }
 
-    @ExceptionHandler(MailException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMailException(MailException ex) {
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.<Void>builder()
-                .status(503)
-                .message("Khong gui duoc email OTP. Kiem tra Resend (RESEND_API_KEY/RESEND_FROM) hoac SMTP.")
-                .build());
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<Void>builder()
                 .status(500)
-                .message("Đã xảy ra lỗi hệ thống")
+                .message("ÄÃ£ xáº£y ra lá»—i há»‡ thá»‘ng")
                 .build());
     }
 }
+
