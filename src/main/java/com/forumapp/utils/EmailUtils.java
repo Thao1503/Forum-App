@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,18 +14,22 @@ import org.springframework.stereotype.Component;
 public class EmailUtils {
 
     private final JavaMailSender mailSender;
+    private final ResendEmailClient resendEmailClient;
 
+    @Async
     public void sendOtpVerify(String to, String subject, String content){
+        // Prefer Resend (HTTP) in hosted environments where outbound SMTP is blocked.
+        try {
+            resendEmailClient.sendTextEmail(to, subject, content);
+            return;
+        } catch (Exception resendErr) {
+            log.warn("Resend failed, falling back to SMTP (may be blocked): {}", resendErr.getMessage());
+        }
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject(subject);
         message.setText(content);
-        try {
-            mailSender.send(message);
-        } catch (MailException e) {
-            // Important: don't pretend the OTP was sent; surface this in logs and the API response.
-            log.error("Failed to send OTP email to {}", to, e);
-            throw e;
-        }
+        mailSender.send(message);
     }
 }

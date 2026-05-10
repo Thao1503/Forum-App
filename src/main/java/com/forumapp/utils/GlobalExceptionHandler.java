@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleMailException(MailException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.<Void>builder()
                 .status(503)
-                .message("Khong gui duoc email OTP. Kiem tra SMTP/MAIL_PASSWORD tren server.")
+                .message("Khong gui duoc email OTP. Kiem tra Resend (RESEND_API_KEY/RESEND_FROM) hoac SMTP.")
                 .build());
     }
 
