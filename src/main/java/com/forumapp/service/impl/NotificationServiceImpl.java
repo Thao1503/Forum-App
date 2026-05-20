@@ -1,6 +1,8 @@
 package com.forumapp.service.impl;
 
 import com.forumapp.entity.*;
+import com.forumapp.model.event.LikeEvent;
+import com.forumapp.model.request.NotificationRequest;
 import com.forumapp.model.response.LikeResponse;
 import com.forumapp.model.response.NotificationResponse;
 import com.forumapp.model.response.NotificationWsDto;
@@ -9,6 +11,7 @@ import com.forumapp.security.UserPrincipal;
 import com.forumapp.service.NotificationService;
 import com.forumapp.service.UtilsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -33,6 +36,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final CommentRepository commentRepository;
     private final NotificationRealtimeService notificationRealtimeService;
     private final UtilsService utilsService;
+    private final ApplicationEventPublisher eventPublisher;
+
 
 
 
@@ -70,7 +75,7 @@ public class NotificationServiceImpl implements NotificationService {
         Page<NotificationResponse> result = list.map(data -> NotificationResponse.builder()
                 .id(data.getId())
                 .username(data.getRecipient().getUsername())
-                .avatar(data.getRecipient().getProfile().getAvatar())
+                .avatar(data.getAvatar())
                 .title(data.getMessage())
                 .date(data.getCreatedAt())
                 .message(data.getMessage())
@@ -129,24 +134,10 @@ public class NotificationServiceImpl implements NotificationService {
                 .post(post)
                 .user(user)
                 .build();
-        likeRepository.save(like);
+        likeRepository.saveAndFlush(like);
 
-        UserEntity user2 = userRepository.findById(post.getAuthor().getId()).orElseThrow(() -> new RuntimeException("Người nhận không tồn tại"));
+        eventPublisher.publishEvent(new LikeEvent(user, like));
 
-
-        if(post.getAuthor().getId() != up.getId()){
-            OffsetDateTime date = OffsetDateTime.now();
-            utilsService.notificationPost(user2, post.getTitle(), date, post.getSlug());
-            notificationRealtimeService.pushToUser(
-                    post.getAuthor().getUsername(),
-                    NotificationWsDto.builder()
-                            .title("Bài viết của bạn đã có người thích")
-                            .message(user.getUsername() + " đã thích bài viết của bạn")
-                            .slug(post.getSlug())
-                            .createdAt(date)
-                            .username(user.getUsername())
-                            .build());
-        }
     }
 
 
@@ -166,23 +157,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .comment(cmt)
                 .user(user)
                 .build();
-        likeRepository.save(like);
+        likeRepository.saveAndFlush(like);
 
-        UserEntity user2 = userRepository.findById(cmt.getUser().getId()).orElseThrow(() -> new RuntimeException("Người nhận không tồn tại"));
-
-        if(cmt.getUser().getId() != up.getId()){
-            OffsetDateTime date = OffsetDateTime.now();
-            utilsService.notificationPost(user2 , cmt.getContent(), date, cmt.getSlug());
-            notificationRealtimeService.pushToUser(
-                    cmt.getUser().getUsername(),
-                    NotificationWsDto.builder()
-                            .title("Bình luận của bạn đã có người thích")
-                            .message(user.getUsername() + " đã thích bình luận của bạn")
-                            .slug(cmt.getContent())
-                            .createdAt(date)
-                            .username(user.getUsername())
-                            .build());
-        }
+        eventPublisher.publishEvent(new LikeEvent(user, like));
     }
 
     @Override

@@ -169,6 +169,8 @@ public class PostServiceImpl implements PostService {
                     .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
         }
 
+
+
         String viewKey;
         List<FollowResponse> result = new ArrayList<>();
         if (user != null) {

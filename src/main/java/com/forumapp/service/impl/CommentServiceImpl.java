@@ -2,6 +2,7 @@ package com.forumapp.service.impl;
 
 import com.forumapp.entity.*;
 import com.forumapp.mapper.CommentMapper;
+import com.forumapp.model.event.CommentEvent;
 import com.forumapp.model.request.CommentRequest;
 import com.forumapp.model.response.CategoryResponse;
 import com.forumapp.model.response.CommentResponse;
@@ -12,8 +13,11 @@ import com.forumapp.security.UserPrincipal;
 import com.forumapp.service.CommentService;
 import com.forumapp.service.UtilsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,11 +33,7 @@ public class CommentServiceImpl implements CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
-    private final FollowRepository followRepository;
-    private final UtilsService utilsService;
-    private final NotificationRealtimeService notificationRealtimeService;
-    private final CategoryRepository categoryRepository;
-    private final UserProfileRepository userProfileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<CommentResponse> findTop5CommentNewest(){
@@ -59,6 +59,7 @@ public class CommentServiceImpl implements CommentService {
                 .build()).collect(Collectors.toList());
     }
 
+
     @Override
     @Transactional
     public CommentResponse commentPost(String slug, CommentRequest request) {
@@ -80,6 +81,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(user);
         comment.setPost(post);
 
+
         if (request.getQuotedCommentId() != null) {
             CommentEntity quoted = commentRepository.findById(request.getQuotedCommentId())
                     .orElseThrow(() -> new RuntimeException("Bình luận được trích dẫn không tồn tại"));
@@ -87,21 +89,7 @@ public class CommentServiceImpl implements CommentService {
             if (!quoted.getPost().getId().equals(post.getId())) {
                 throw new RuntimeException("Bình luận được trích dẫn không thuộc bài viết này");
             }
-
-            UserEntity repUser = userRepository.findById(quoted.getUser().getId()).orElseThrow(() -> new RuntimeException("Người bình luận không tồn tại"));
-
             comment.setQuoted(quoted.getId());
-            utilsService.notificationPost(repUser, post.getTitle(),quoted.getCreatedAt(),quoted.getSlug());
-            notificationRealtimeService.pushToUser(
-                    repUser.getUsername(),
-                    NotificationWsDto.builder()
-                            .title("Có người phản hồi bình luận của bạn")
-                            .message(user.getUsername() + " đã bình luận")
-                            .slug(quoted.getSlug())
-                            .createdAt(quoted.getCreatedAt())
-                            .username(user.getUsername())
-                            .build()
-            );
         }
 
         if (request.getQuotedPostId() != null) {
@@ -112,73 +100,26 @@ public class CommentServiceImpl implements CommentService {
             }
             comment.setQuotedPost(quotedPost.getId());
         }
-            commentRepository.save(comment);
+        commentRepository.saveAndFlush(comment);
 
-            comment.setSlug(post.getSlug() + "#post-" + comment.getId());
-            commentRepository.save(comment);
+        comment.setSlug(post.getSlug() + "#post-" + comment.getId());
+        commentRepository.save(comment);
 
-        notificationRealtimeService.pushToPost(
-                post.getId(),
-                CommentWsDto.builder()
-                        .type("COMMENT_CREATED")
-                        .postId(post.getId())
-                        .commentId(comment.getId())
-                        .slug(comment.getSlug())
-                        .content(comment.getContent())
-                        .createdAt(comment.getCreatedAt())
-                        .username(user.getUsername())
-                        .avatar(comment.getUser().getProfile() != null ? comment.getUser().getProfile().getAvatar() : null)
-                        .build()
-        );
+        post.setReplies(post.getReplies() + 1);
+        postRepository.save(post);
 
-            Long count = post.getReplies() + 1;
-            post.setReplies(count);
-            postRepository.save(post);
-
-        UserProfileEntity profile = userProfileRepository.findByUserId(up.getId());
-        Long point = profile.getPoints() + 1L;
-        profile.setPoints(point);
-        userProfileRepository.save(profile);
-
-
-
-            CategoryEntity category = categoryRepository.findByPosts_Slug(slug);
-            Long count2 = category.getMessageCount() + 1L;
-            category.setMessageCount(count2);
-            categoryRepository.save(category);
-
-
-
-            List<FollowPostEntity> followers = followRepository.findByPostId(post.getId());
-
-
-            for (FollowPostEntity f : followers) {
-                if (!Boolean.TRUE.equals(f.getChecked())) continue;
-                if (f.getUser() == null || f.getUser().getId().equals(user.getId())) continue;
-                utilsService.notificationPost(f.getUser(), post.getTitle(), comment.getCreatedAt(), comment.getSlug());
-                notificationRealtimeService.pushToUser(
-                        f.getUser().getUsername(),
-                        NotificationWsDto.builder()
-                                .title("Bài viết của bạn có bình luận mới")
-                                .message(user.getUsername() + " đã bình luận")
-                                .slug(comment.getSlug())
-                                .createdAt(comment.getCreatedAt())
-                                .username(user.getUsername())
-                                .build()
-                );
-            }
-
-
-            return CommentResponse.builder()
-                    .id(comment.getId())
-                    .avatar(comment.getUser().getProfile().getAvatar())
-                    .username(comment.getUser().getUsername())
-                    .content(comment.getContent())
-                    .createAt(comment.getCreatedAt())
-                    .build();
+        eventPublisher.publishEvent(new CommentEvent(user, comment, post.getSlug()));
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .avatar(comment.getUser().getProfile().getAvatar())
+                .username(comment.getUser().getUsername())
+                .content(comment.getContent())
+                .createAt(comment.getCreatedAt())
+                .build();
 
 
     }
+
 
     @Override
     @Transactional

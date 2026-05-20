@@ -2,6 +2,8 @@ package com.forumapp.service;
 
 import com.forumapp.model.request.CommentRequest;
 import com.forumapp.model.response.CommentResponse;
+import com.forumapp.security.UserPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 

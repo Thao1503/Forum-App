@@ -23,6 +23,13 @@ public class NotificationEntity {
     @JoinColumn(name = "user_id")
     private UserEntity recipient;
 
+    @Column(name = "user_send")
+    private Long userSend;
+
+    @Column(name = "avatar_send")
+    private String avatar;
+
+
     @Column(nullable = false)
     private String message;
 

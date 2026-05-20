@@ -23,9 +23,7 @@ public class EmailUtils {
     @Value("${MAIL_FROM:}")
     private String mailFrom;
 
-    @Async
     public void sendOtpVerify(String to, String subject, String content) {
-        // Railway often blocks outbound SMTP ports; use SendGrid Web API over HTTPS (443).
         if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
             throw new IllegalStateException("Missing SENDGRID_API_KEY env var");
         }
@@ -52,7 +50,6 @@ public class EmailUtils {
                 );
             }
         } catch (Exception e) {
-            // In @Async, exceptions won't propagate to the caller; rethrow so it shows in logs.
             throw new RuntimeException("SendGrid send failed", e);
         }
     }

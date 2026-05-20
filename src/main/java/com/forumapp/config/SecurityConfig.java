@@ -32,7 +32,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Lấy danh sách domain từ môi trường, mặc định cho phép localhost để dev
         String raw = System.getenv().getOrDefault(
                 "APP_CORS_ALLOWED_ORIGINS",
                 "http://localhost:3000,http://localhost:5173,https://forum-front-end-pied.vercel.app"

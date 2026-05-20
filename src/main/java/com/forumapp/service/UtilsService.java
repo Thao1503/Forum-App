@@ -2,6 +2,7 @@ package com.forumapp.service;
 
 import com.forumapp.entity.PostEntity;
 import com.forumapp.entity.UserEntity;
+import com.forumapp.model.request.NotificationRequest;
 import com.forumapp.model.response.CommentResponse;
 import com.forumapp.model.response.NotificationResponse;
 import org.springframework.data.domain.Page;
@@ -11,10 +12,8 @@ import java.time.OffsetDateTime;
 
 public interface UtilsService {
 
-    NotificationResponse notificationPost(UserEntity user,
-                                          String title,
-                                          OffsetDateTime date,
-                                          String slug);
+    void notificationPost(NotificationRequest request);
+    void notificationLike(NotificationRequest request);
 
 
 }

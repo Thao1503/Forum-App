@@ -2,6 +2,7 @@ package com.forumapp.api;
 
 import com.forumapp.model.response.ApiResponse;
 import com.forumapp.model.response.UserResponse;
+import com.forumapp.security.UserPrincipal;
 import com.forumapp.service.UserService;
 import lombok.AllArgsConstructor;
 
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

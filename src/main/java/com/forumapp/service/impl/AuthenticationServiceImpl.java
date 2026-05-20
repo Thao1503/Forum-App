@@ -7,6 +7,8 @@ import com.forumapp.entity.UserEntity;
 import com.forumapp.entity.UserProfileEntity;
 import com.forumapp.exception.DuplicateResourceException;
 import com.forumapp.mapper.UserMapper;
+import com.forumapp.model.event.SendEmailEvent;
+import com.forumapp.model.event.UserVerifiedEvent;
 import com.forumapp.model.request.LoginRequest;
 import com.forumapp.model.request.OtpRequest;
 import com.forumapp.model.request.PasswordRequest;
@@ -23,17 +25,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -49,6 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final JwtUtils jwtUtils;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Value("${jwt.refresh-expiration}")
@@ -62,17 +64,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new DuplicateResourceException("Email đã tồn tại");
         }
 
+
         if(userRepository.existsByUsername(request.getUsername())){
             throw new DuplicateResourceException("Tên người dùng đã tồn tại.");
         }
         String otp = String.format("%06d", new Random().nextInt(1000000));
         redisTemplate.opsForValue().set("OTP:" + request.getEmail(), otp, 5, TimeUnit.MINUTES);
         redisTemplate.opsForValue().set("REG_DATA:" + request.getEmail(), request, 5, TimeUnit.MINUTES);
-        emailUtils.sendOtpVerify(
-                request.getEmail(),
-                "Mã OTP của bạn",
-                "Mã xác thực là : " + otp
-        );
+
+        eventPublisher.publishEvent(new SendEmailEvent(request.getEmail(), otp, "Mã OTP xác thực tài khoản"));
     }
 
     @Override
@@ -80,11 +80,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String otp = String.format("%06d",new Random().nextInt(1000000));
         redisTemplate.opsForValue().set("OTP:" + request.getEmail(), otp, 5, TimeUnit.MINUTES);
 
-        emailUtils.sendOtpVerify(
-                request.getEmail(),
-                "Mã OTP của bạn",
-                "Mã xác thực là : " + otp
-        );
+        eventPublisher.publishEvent(new SendEmailEvent(request.getEmail(), otp, "Mã OTP xác thực tài khoản"));
     }
 
 
@@ -105,13 +101,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 newUser.setVerified(true);
                 newUser.setStatus(UserStatus.ACTIVE);
 
-                UserProfileEntity profile = UserProfileEntity.builder()
-                                .user(newUser)
-                                .build();
-
-                newUser.setProfile(profile);
-                userRepository.save(newUser);
+                newUser = userRepository.saveAndFlush(newUser);
                 redisTemplate.delete(Arrays.asList("OTP:" + request.getEmail(), "REG_DATA:" + request.getEmail()));
+
+                //Event listener
+                eventPublisher.publishEvent(new UserVerifiedEvent(newUser));
         }
     }
 
@@ -125,11 +119,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisTemplate.delete("OTP" + email);
         String otp = String.format("%06d", new Random().nextInt(1000000));
         redisTemplate.opsForValue().set("OTP:" + email, otp, 5, TimeUnit.MINUTES);
-        emailUtils.sendOtpVerify(
-                email,
-                "Mã OTP phục hồi mật khẩu",
-                "Mã xác thực của bạn là: " + otp
-        );
+
+        eventPublisher.publishEvent(new SendEmailEvent(email, otp, "Mã OTP đặt lại mật khẩu tài khoản"));
 
         return email;
     }
@@ -254,6 +245,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .refreshToken(newRefreshToken)
                 .build();
     }
+
 
 
 

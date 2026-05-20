@@ -3,9 +3,11 @@ package com.forumapp.api;
 import com.forumapp.model.request.CommentRequest;
 import com.forumapp.model.response.ApiResponse;
 import com.forumapp.model.response.CommentResponse;
+import com.forumapp.security.UserPrincipal;
 import com.forumapp.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
